@@ -21,13 +21,13 @@ class HyphaeSentence {
     this.sentence = axiom; // The initial axiom
     this.depth = findMaxDepth(axiom); // Calculate the maximum depth of M's in the axiom
     this.previousSentence = ""; // To store the previous state of the sentence for animation
-    this.previousDepth = 0;
+    this.previousDepth = findMaxDepth(axiom);
     this.x = x; // X coordinate for start of drawing
     this.y = y; // Y coordinate for start of drawing
     this.rules = rules; // Rules for generating the next sentence
     this.animating = false; // Flag to indicate if the sentence is currently being animated
     this.animationProgress = 0; // Progress of the animation
-    this.animationSpeed = 0.02; // Speed of the animation
+    this.animationSpeed = 0.002; // Speed of the animation
   }
 
   static genAngles() {
@@ -40,9 +40,9 @@ class HyphaeSentence {
   }
 
   step() {
-    console.log("stepping..." + this.sentence);
+    // console.log("stepping..." + this.sentence);
     if (this.animating) {
-      console.log("Already animating... failed to step: " + this.sentence);
+      // console.log("Already animating... failed to step: " + this.sentence);
       return; // Prevent triggering new step during animation
     }
 
@@ -84,7 +84,7 @@ rules1[0] = {
   b: "M[aMbMcM][eMfMgM]]"
 }
 // var replacement = "M" + "[" + turnString(angles[1]) + "M" + turnString(angles[2]) + "M" + turnString(angles[3]) + "M]" + "[" + turnString(angles[5]) + "M" + turnString(angles[6]) + "M" + turnString(angles[7]) + "M]]";
-var axiom1 = "[M][M]"; // Initial axiom for the first hyphae sentence
+var axiom1 = "[M]"; // Initial axiom for the first hyphae sentence
 var hyphaeSentences = [new HyphaeSentence(axiom1, 400, 400, rules1), new HyphaeSentence(axiom1, 55, 600, rules1)]; // Create an array of hyphae sentences
 
 var len = 10;
@@ -194,14 +194,16 @@ function drawSentences(progress) {
     
     // Calculate how many characters to draw based on progress
     var lastMaxDepth = hyphaeSentences[sIndex].previousDepth;
-    var drawDepth = lastMaxDepth + Math.floor((hyphaeSentences[sIndex].depth - lastMaxDepth) * progress);
+    var drawDepth = lastMaxDepth + (hyphaeSentences[sIndex].depth - lastMaxDepth) * progress;
+    // console.log("drawDepth: " + drawDepth);
     
     var currentDepth = 0;
     var intStack = [0];
     var intStackIndex = 0;
     for (var i = 0; i < hyphaeSentences[sIndex].sentence.length; i++) {
       var current = hyphaeSentences[sIndex].sentence.charAt(i);
-      if (current == "M" && currentDepth <= drawDepth) {
+      // console.log("sub: " + (drawDepth - currentDepth));
+      if (current == "M" && currentDepth < Math.floor(drawDepth)) {
         if (currentDepth < 1)
           stroke(255, 255, 200, 160); // more transparent for the first M
         else
@@ -211,6 +213,15 @@ function drawSentences(progress) {
 
         line(0, 0, 0, -len);
         translate(0, -len);
+      } else if (current == "M" && currentDepth < drawDepth) {
+        currentDepth++;
+        intStack[intStackIndex]++;
+        paritalScalar = Math.abs((currentDepth - drawDepth) - 1)
+        // console.log("partialScalar: " + paritalScalar);
+        // Draw the tips of the hyphae that aren't fully extended yet
+        partialLength = -len * Math.abs((currentDepth - drawDepth) - 1);
+        line(0, 0, 0, partialLength);
+        // translate(0, partialLength);
       } else if (current == "+") {
         rotate(angle);
       } else if (current == "-") {
@@ -242,9 +253,9 @@ function draw() {
   for(var i = 0; i < hyphaeSentences.length; i++) {
     // Check if the sentence is animating
     if (hyphaeSentences[i].animating) {
-      console.log("Animation progress: " + hyphaeSentences[i].animationProgress);
+      // console.log("Animation progress: " + hyphaeSentences[i].animationProgress);
       hyphaeSentences[i].animationProgress += hyphaeSentences[i].animationSpeed;
-      console.log("Animation progress: " + hyphaeSentences[i].animationProgress);
+      // console.log("Animation progress: " + hyphaeSentences[i].animationProgress);
       if (hyphaeSentences[i].animationProgress >= 1.0) {
         hyphaeSentences[i].animationProgress = 1.0;
         hyphaeSentences[i].animating = false;
