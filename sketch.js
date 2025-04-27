@@ -150,7 +150,6 @@ function turtle() {
 
   for(var hIndex = 0; hIndex < hyphaeSentences.length; hIndex++) {
     if (hyphaeSentences[hIndex].animating) {
-      drawPreviousSentences(); // Draw the previous sentence in faded color
       drawSentences(hyphaeSentences[hIndex].animationProgress); // Draw the current sentence acording to current animation progress
     }
     else {
@@ -186,39 +185,16 @@ function findMaxDepth(sentence) {
   return maxLength;
 }
 
-function drawPreviousSentences() {
-  for (var sIndex = 0; sIndex < hyphaeSentences.length; sIndex++) {
-    push();
-    translate(hyphaeSentences[sIndex].x, hyphaeSentences[sIndex].y);
-    stroke(255, 255, 200, 255);
-    for (var i = 0; i < hyphaeSentences[sIndex].sentence.length; i++) {
-      var current = hyphaeSentences[sIndex].previousSentence.charAt(i);
-      if (current == "M") {
-        line(0, 0, 0, -len);
-        translate(0, -len);
-      } else if (current == "+") {
-        rotate(angle);
-      } else if (current == "-") {
-        rotate(-angle);
-      } else if (current == "[") {
-        push();
-      } else if (current == "]") {
-        pop();
-      }
-    }
-    pop();
-  }
-}
-
 function drawSentences(progress) {
   // Draw each sentence using horizontal offsets
   for (var sIndex = 0; sIndex < hyphaeSentences.length; sIndex++) {
     push();
     translate(hyphaeSentences[sIndex].x, hyphaeSentences[sIndex].y);
     stroke(255, 255, 200, 255);
+    
     // Calculate how many characters to draw based on progress
-
-    var drawDepth = Math.floor(hyphaeSentences[sIndex].depth * progress);
+    var lastMaxDepth = hyphaeSentences[sIndex].previousDepth;
+    var drawDepth = lastMaxDepth + Math.floor((hyphaeSentences[sIndex].depth - lastMaxDepth) * progress);
     
     var currentDepth = 0;
     var intStack = [0];
