@@ -243,6 +243,13 @@ function drawSentences(progress) {
 function setup() {
   createCanvas(800, 800);
   createButton("step").mousePressed(step);
+  var run_interval = null; // Variable to hold the interval ID
+  createButton("run").mousePressed(function() {
+    run_interval = setInterval(step, 50); // Start stepping every 50ms
+  });
+  createButton("stop").mousePressed(function() {
+    clearInterval(run_interval); // Stop the stepping interval
+  });
 }
 
 function draw() {
