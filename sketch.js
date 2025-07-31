@@ -145,16 +145,10 @@ function turtle() {
   background(51);
   resetMatrix();
   
-  // Draw previous state in faded color
-  stroke(100, 100, 200);
-
+  // Draw each sentence individually
   for(var hIndex = 0; hIndex < hyphaeSentences.length; hIndex++) {
-    if (hyphaeSentences[hIndex].animating) {
-      drawSentences(hyphaeSentences[hIndex].animationProgress); // Draw the current sentence acording to current animation progress
-    }
-    else {
-      drawSentences(1.0); // Draw the current sentence in full if not animating
-    }
+    var progress = hyphaeSentences[hIndex].animating ? hyphaeSentences[hIndex].animationProgress : 1.0;
+    drawSingleSentence(hyphaeSentences[hIndex], progress);
   }
 }
 
@@ -185,58 +179,59 @@ function findMaxDepth(sentence) {
   return maxLength;
 }
 
+function drawSingleSentence(hyphaeSentence, progress) {
+  push();
+  translate(hyphaeSentence.x, hyphaeSentence.y);
+  stroke(255, 255, 200, 255);
+  
+  // Calculate how many characters to draw based on progress
+  var lastMaxDepth = hyphaeSentence.previousDepth;
+  var drawDepth = lastMaxDepth + (hyphaeSentence.depth - lastMaxDepth) * progress;
+  
+  var currentDepth = 0;
+  var intStack = [0];
+  var intStackIndex = 0;
+  for (var i = 0; i < hyphaeSentence.sentence.length; i++) {
+    var current = hyphaeSentence.sentence.charAt(i);
+    if (current == "M" && currentDepth < Math.floor(drawDepth)) {
+      if (currentDepth < 1)
+        stroke(255, 255, 200, 160); // more transparent for the first M
+      else
+        stroke(255, 255, 200, 255);
+      currentDepth++;
+      intStack[intStackIndex]++;
+
+      line(0, 0, 0, -len);
+      translate(0, -len);
+    } else if (current == "M" && currentDepth < drawDepth) {
+      currentDepth++;
+      intStack[intStackIndex]++;
+      var partialScalar = Math.abs((currentDepth - drawDepth) - 1);
+      // Draw the tips of the hyphae that aren't fully extended yet
+      var partialLength = -len * Math.abs((currentDepth - drawDepth) - 1);
+      line(0, 0, 0, partialLength);
+    } else if (current == "+") {
+      rotate(angle);
+    } else if (current == "-") {
+      rotate(-angle);
+    } else if (current == "[") {
+      intStack.push(0);
+      intStackIndex++;
+      push();
+    } else if (current == "]") {
+      currentDepth -= intStack.pop();
+      intStackIndex--;
+      pop();
+    }
+  }
+  pop();
+}
+
 function drawSentences(progress) {
+  // Legacy function - kept for compatibility but no longer used
   // Draw each sentence using horizontal offsets
   for (var sIndex = 0; sIndex < hyphaeSentences.length; sIndex++) {
-    push();
-    translate(hyphaeSentences[sIndex].x, hyphaeSentences[sIndex].y);
-    stroke(255, 255, 200, 255);
-    
-    // Calculate how many characters to draw based on progress
-    var lastMaxDepth = hyphaeSentences[sIndex].previousDepth;
-    var drawDepth = lastMaxDepth + (hyphaeSentences[sIndex].depth - lastMaxDepth) * progress;
-    // console.log("drawDepth: " + drawDepth);
-    
-    var currentDepth = 0;
-    var intStack = [0];
-    var intStackIndex = 0;
-    for (var i = 0; i < hyphaeSentences[sIndex].sentence.length; i++) {
-      var current = hyphaeSentences[sIndex].sentence.charAt(i);
-      // console.log("sub: " + (drawDepth - currentDepth));
-      if (current == "M" && currentDepth < Math.floor(drawDepth)) {
-        if (currentDepth < 1)
-          stroke(255, 255, 200, 160); // more transparent for the first M
-        else
-          stroke(255, 255, 200, 255);
-        currentDepth++;
-        intStack[intStackIndex]++;
-
-        line(0, 0, 0, -len);
-        translate(0, -len);
-      } else if (current == "M" && currentDepth < drawDepth) {
-        currentDepth++;
-        intStack[intStackIndex]++;
-        paritalScalar = Math.abs((currentDepth - drawDepth) - 1)
-        // console.log("partialScalar: " + paritalScalar);
-        // Draw the tips of the hyphae that aren't fully extended yet
-        partialLength = -len * Math.abs((currentDepth - drawDepth) - 1);
-        line(0, 0, 0, partialLength);
-        // translate(0, partialLength);
-      } else if (current == "+") {
-        rotate(angle);
-      } else if (current == "-") {
-        rotate(-angle);
-      } else if (current == "[") {
-        intStack.push(0);
-        intStackIndex++;
-        push();
-      } else if (current == "]") {
-        currentDepth -= intStack.pop();
-        intStackIndex--;
-        pop();
-      }
-    }
-    pop();
+    drawSingleSentence(hyphaeSentences[sIndex], progress);
   }
 }
 
@@ -250,6 +245,9 @@ function setup() {
   createButton("stop").mousePressed(function() {
     clearInterval(run_interval); // Stop the stepping interval
   });
+  
+  // Hide the default cursor when over the canvas
+  noCursor();
 }
 
 function draw() {
@@ -269,5 +267,24 @@ function draw() {
         createP(hyphaeSentences[i].sentence);
       }
     }
+  }
+  
+  // Draw custom cursor circle when mouse is over canvas
+  if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+    push();
+    stroke(255, 100, 100);
+    strokeWeight(2);
+    noFill();
+    circle(mouseX, mouseY, 20);
+    pop();
+  }
+}
+
+function mousePressed() {
+  // Check if the mouse click is within the canvas bounds
+  if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+    // Add a new hyphae sentence immediately at the clicked location
+    var newHyphae = new HyphaeSentence(axiom1, mouseX, mouseY, rules1);
+    hyphaeSentences.push(newHyphae);
   }
 }
