@@ -39,6 +39,64 @@ class HyphaeSentence {
     return result;
   }
 
+  /**
+   * Generates a randomized axiom with variable number of [A] patterns and random angles
+   * @param {number} minCount - Minimum number of [A] patterns (default: 1)
+   * @param {number} maxCount - Maximum number of [A] patterns (default: 5)
+   * @param {number} minAngle - Minimum angle value (default: -40)
+   * @param {number} maxAngle - Maximum angle value (default: 40)
+   * @returns {string} - A randomized axiom string
+   */
+  static generateRandomAxiom(minCount = 1, maxCount = 5, minAngle = -40, maxAngle = 40) {
+    // Generate random count of [A] patterns
+    var count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    
+    var axiom = "";
+    
+    for (var i = 0; i < count; i++) {
+      // Generate random angle for this [A] pattern
+      var randomAngle = Math.floor(Math.random() * (maxAngle - minAngle + 1)) + minAngle;
+      
+      // Convert angle to turn string format
+      var angleString = HyphaeSentence.generateTurnString(randomAngle);
+      
+      // Add [A] pattern with the random angle
+      axiom += "[" + angleString + "M]";
+    }
+    
+    return axiom;
+  }
+
+  /**
+   * Helper method to generate turn string from angle value
+   * @param {number} deg - Angle in degrees
+   * @returns {string} - Turn string with + or - characters
+   */
+  static generateTurnString(deg) {
+    var result = "";
+    var absDeg = Math.abs(deg);
+    for (var i = 0; i < absDeg; i++) {
+      result += (deg >= 0 ? "+" : "-");
+    }
+    return result;
+  }
+
+  /**
+   * Creates a new HyphaeSentence instance with a randomized axiom
+   * @param {number} x - X coordinate for positioning
+   * @param {number} y - Y coordinate for positioning
+   * @param {Array} rules - Rules array for sentence generation
+   * @param {number} minCount - Minimum number of [A] patterns (default: 1)
+   * @param {number} maxCount - Maximum number of [A] patterns (default: 5)
+   * @param {number} minAngle - Minimum angle value (default: -40)
+   * @param {number} maxAngle - Maximum angle value (default: 40)
+   * @returns {HyphaeSentence} - New instance with randomized axiom
+   */
+  static createWithRandomAxiom(x, y, rules, minCount = 1, maxCount = 5, minAngle = -40, maxAngle = 40) {
+    var randomAxiom = HyphaeSentence.generateRandomAxiom(minCount, maxCount, minAngle, maxAngle);
+    return new HyphaeSentence(randomAxiom, x, y, rules);
+  }
+
   step() {
     // console.log("stepping..." + this.sentence);
     if (this.animating) {
@@ -92,7 +150,7 @@ var degrees = 1;
 var angle = degrees * (Math.PI / 180);
 
 // Development and performance tracking variables
-var DEV_MODE = true; // Set to false for production
+var DEV_MODE = false; // Set to false for production
 var fpsCounter = 0;
 var frameTimeHistory = [];
 var avgFPS = 0;
@@ -392,8 +450,9 @@ function mousePressed() {
       return; // Exit early if clicking on UI elements
     }
     
-    // Add a new hyphae sentence immediately at the clicked location
-    var newHyphae = new HyphaeSentence(axiom1, mouseX, mouseY, rules1);
+    // Add a new hyphae sentence with randomized axiom at the clicked location
+    // This will create 1-25 [A] patterns with angles between -180 and 180 degrees
+    var newHyphae = HyphaeSentence.createWithRandomAxiom(mouseX, mouseY, rules1, 1, 25, -180, 180);
     hyphaeSentences.push(newHyphae);
   }
 }
