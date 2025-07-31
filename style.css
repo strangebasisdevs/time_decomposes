@@ -39,3 +39,22 @@ canvas {
 .button-container button:active {
   background-color: rgba(50, 50, 50, 0.9);
 }
+
+/* FPS counter styles */
+.fps-counter {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  min-width: 200px;
+  white-space: nowrap;
+}

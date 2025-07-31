@@ -91,6 +91,26 @@ var len = 10;
 var degrees = 1;
 var angle = degrees * (Math.PI / 180);
 
+// Development and performance tracking variables
+var DEV_MODE = true; // Set to false for production
+var fpsCounter = 0;
+var frameTimeHistory = [];
+var avgFPS = 0;
+var fpsDisplay;
+var lastPerformanceCheck = 0;
+
+// Performance monitoring function
+function logPerformance(label) {
+  if (DEV_MODE && millis() - lastPerformanceCheck > 5000) { // Log every 5 seconds
+    console.log(`Performance Check - ${label}:`);
+    console.log(`  FPS: ${avgFPS}`);
+    console.log(`  Hyphae objects: ${hyphaeSentences.length}`);
+    console.log(`  Animating objects: ${hyphaeSentences.filter(h => h.animating).length}`);
+    console.log(`  Average sentence length: ${Math.round(hyphaeSentences.reduce((sum, h) => sum + h.sentence.length, 0) / hyphaeSentences.length)}`);
+    lastPerformanceCheck = millis();
+  }
+}
+
 function turnString(deg) {
   var result = "";
   var absDeg = Math.abs(deg);
@@ -261,6 +281,29 @@ function setup() {
   });
   stopBtn.parent(buttonContainer);
   
+  // Create development mode toggle button
+  var devBtn = createButton("dev: " + (DEV_MODE ? "ON" : "OFF"));
+  devBtn.mousePressed(function() {
+    DEV_MODE = !DEV_MODE;
+    devBtn.html("dev: " + (DEV_MODE ? "ON" : "OFF"));
+    
+    if (DEV_MODE && !fpsDisplay) {
+      fpsDisplay = createDiv('FPS: 0');
+      fpsDisplay.class('fps-counter');
+      frameTimeHistory = []; // Reset frame history
+    } else if (!DEV_MODE && fpsDisplay) {
+      fpsDisplay.remove();
+      fpsDisplay = null;
+    }
+  });
+  devBtn.parent(buttonContainer);
+  
+  // Create FPS counter display if in development mode
+  if (DEV_MODE) {
+    fpsDisplay = createDiv('FPS: 0');
+    fpsDisplay.class('fps-counter');
+  }
+  
   // Hide the default cursor when over the canvas
   noCursor();
 }
@@ -271,6 +314,34 @@ function windowResized() {
 }
 
 function draw() {
+  // Performance tracking for development mode
+  if (DEV_MODE) {
+    var currentTime = millis();
+    if (frameTimeHistory.length > 0) {
+      var deltaTime = currentTime - frameTimeHistory[frameTimeHistory.length - 1];
+      var currentFPS = 1000 / deltaTime;
+      
+      // Keep rolling average of last 60 frames
+      frameTimeHistory.push(currentTime);
+      if (frameTimeHistory.length > 60) {
+        frameTimeHistory.shift();
+      }
+      
+      // Calculate average FPS every 10 frames to reduce jitter
+      if (frameCount % 10 === 0) {
+        var totalTime = frameTimeHistory[frameTimeHistory.length - 1] - frameTimeHistory[0];
+        avgFPS = Math.round((frameTimeHistory.length - 1) * 1000 / totalTime);
+        var animatingCount = hyphaeSentences.filter(h => h.animating).length;
+        fpsDisplay.html('FPS: ' + avgFPS + ' | Objects: ' + hyphaeSentences.length + ' | Animating: ' + animatingCount);
+      }
+    } else {
+      frameTimeHistory.push(currentTime);
+    }
+    
+    // Log performance metrics periodically
+    logPerformance("Draw Loop");
+  }
+  
   background(51);
   turtle();
   
@@ -301,8 +372,20 @@ function draw() {
 }
 
 function mousePressed() {
-  // Check if the mouse click is within the canvas bounds
+  // Check if the mouse click is within the canvas bounds and not on a UI element
   if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+    // Check if the click is not on any button or UI element
+    var clickedElement = document.elementFromPoint(mouseX, mouseY);
+    
+    // If the clicked element is a button or inside a button container, don't add hyphae
+    if (clickedElement && (
+        clickedElement.tagName === 'BUTTON' || 
+        clickedElement.closest('.button-container') ||
+        clickedElement.closest('.fps-counter')
+    )) {
+      return; // Exit early if clicking on UI elements
+    }
+    
     // Add a new hyphae sentence immediately at the clicked location
     var newHyphae = new HyphaeSentence(axiom1, mouseX, mouseY, rules1);
     hyphaeSentences.push(newHyphae);
