@@ -43,7 +43,7 @@ canvas {
 /* FPS counter styles */
 .fps-counter {
   position: fixed;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   z-index: 1000;
   background-color: rgba(0, 0, 0, 0.8);
