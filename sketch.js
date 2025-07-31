@@ -236,18 +236,38 @@ function drawSentences(progress) {
 }
 
 function setup() {
-  createCanvas(800, 800);
-  createButton("step").mousePressed(step);
+  // Create responsive canvas that fills the window
+  createCanvas(windowWidth, windowHeight);
+  
+  // Create button container div
+  var buttonContainer = createDiv('');
+  buttonContainer.class('button-container');
+  
+  // Create buttons and add them to the container
+  var stepBtn = createButton("step");
+  stepBtn.mousePressed(step);
+  stepBtn.parent(buttonContainer);
+  
   var run_interval = null; // Variable to hold the interval ID
-  createButton("run").mousePressed(function() {
+  var runBtn = createButton("run");
+  runBtn.mousePressed(function() {
     run_interval = setInterval(step, 50); // Start stepping every 50ms
   });
-  createButton("stop").mousePressed(function() {
+  runBtn.parent(buttonContainer);
+  
+  var stopBtn = createButton("stop");
+  stopBtn.mousePressed(function() {
     clearInterval(run_interval); // Stop the stepping interval
   });
+  stopBtn.parent(buttonContainer);
   
   // Hide the default cursor when over the canvas
   noCursor();
+}
+
+// Handle window resizing
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
 
 function draw() {
