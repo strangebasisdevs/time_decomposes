@@ -271,13 +271,19 @@ function setup() {
   var run_interval = null; // Variable to hold the interval ID
   var runBtn = createButton("run");
   runBtn.mousePressed(function() {
-    run_interval = setInterval(step, 50); // Start stepping every 50ms
+    // Only start a new interval if one isn't already running
+    if (run_interval === null) {
+      run_interval = setInterval(step, 50); // Start stepping every 50ms
+    }
   });
   runBtn.parent(buttonContainer);
   
   var stopBtn = createButton("stop");
   stopBtn.mousePressed(function() {
-    clearInterval(run_interval); // Stop the stepping interval
+    if (run_interval !== null) {
+      clearInterval(run_interval); // Stop the stepping interval
+      run_interval = null; // Reset the variable to allow new intervals
+    }
   });
   stopBtn.parent(buttonContainer);
   
