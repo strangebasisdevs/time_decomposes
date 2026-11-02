@@ -1,0 +1,8 @@
+# Reviewed false positives of the Gitleaks history scan, one fingerprint per line
+# (commit:file:rule:line). A real secret means rotate first, never an entry here.
+#
+# Line 2 of the vendored p5.js v1.10.0, byte-identical to the published release
+# (sha512 matches cdnjs and jsDelivr). Both matches are the library's own method
+# names, calculateRemainder2D and calculateRemainder3D, not a credential. The file
+# moved to libraries/ later; the history scan still sees the commit that added it.
+357cedab191a5b6d292b976f279509acc54d4d76:p5.min.js:generic-api-key:2
