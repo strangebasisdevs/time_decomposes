@@ -22,6 +22,10 @@ A simple widget for visualizing fungi growth. This tool procedurally generates s
 
 TODO: define usage instructions
 
+## Benchmark
+
+`node bench/run.js` measures how the cost of a frame grows with the plant. See [bench/README.md](bench/README.md).
+
 ## References
 
 - [Basic Mushroom Development](https://www.fungusfactfriday.com/234-mushroom-development/)
