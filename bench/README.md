@@ -12,9 +12,9 @@ install.
 node bench/run.js
 ```
 
-Options: `--steps N` (generations to grow, default 12), `--budget MS` (stop
-once a frame is slower than this, default 1000), `--json` (raw numbers). If the
-browser is not found, set `CHROME_PATH` to it.
+Options: `--steps N` (generations to grow, 1 to 20, default 12), `--budget MS`
+(stop once a frame is slower than this, 10 to 60000, default 1000), `--json`
+(raw numbers). If the browser is not found, set `CHROME_PATH` to it.
 
 ## What it does
 
@@ -71,7 +71,7 @@ Score: step 9. Every column doubles from one step to the next.
 
 `adapter.js` is the only file here that knows how `sketch.js` works inside.
 If a change renames or replaces what the adapter touches, update the adapter
-so that its four functions keep the promises written above each of them, and
+so that its five functions keep the promises written above each of them, and
 leave `harness.js` alone. The numbers before and after then mean the same
 thing.
 

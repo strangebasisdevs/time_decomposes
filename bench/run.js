@@ -21,6 +21,10 @@ const ROOT = path.resolve(__dirname, '..');
 const FRAME_BUDGET_MS = 1000 / 60;
 const TIMEOUT_MS = 180000;
 const MAX_RESULT_BYTES = 1024 * 1024;
+// Smallest and largest accepted value of each numeric option. bench/harness.js
+// uses the same limits. Budgets under 10 ms are refused because the first
+// sample of a frame can be a few milliseconds slow and would end the run.
+const LIMITS = { steps: [1, 20], budget: [10, 60000] };
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -32,7 +36,7 @@ function usage() {
     'Usage: node bench/run.js [--steps N] [--budget MS] [--json]',
     '',
     '  --steps N    generations to grow, 1 to 20 (default 12)',
-    '  --budget MS  stop once a frame takes longer than this (default 1000)',
+    '  --budget MS  stop once a frame takes longer than this, 10 to 60000 (default 1000)',
     '  --json       print the raw result as JSON instead of a table',
     '',
     'Set CHROME_PATH to use a particular Chrome, Chromium or Edge.'
@@ -46,11 +50,13 @@ function parseArgs(argv) {
     if (arg === '--json') {
       options.json = true;
     } else if (arg === '--steps' || arg === '--budget') {
+      const name = arg.slice(2);
+      const [min, max] = LIMITS[name];
       const value = Number.parseInt(argv[++i], 10);
-      if (!Number.isInteger(value) || value < 1) {
-        fail(arg + ' needs a positive whole number.\n\n' + usage());
+      if (!Number.isInteger(value) || value < min || value > max) {
+        fail(arg + ' needs a whole number from ' + min + ' to ' + max + '.\n\n' + usage());
       }
-      options[arg.slice(2)] = value;
+      options[name] = value;
     } else if (arg === '--help' || arg === '-h') {
       console.log(usage());
       process.exit(0);
@@ -181,7 +187,9 @@ function main() {
         process.exit(exitCode);
       });
     };
-    if (browser && browser.exitCode === null) {
+    // A browser ended by a signal has signalCode set and exitCode still null.
+    const browserRunning = browser && browser.exitCode === null && browser.signalCode === null;
+    if (browserRunning) {
       browser.once('exit', exit);
       browser.kill();
     } else {

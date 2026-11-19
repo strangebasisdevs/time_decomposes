@@ -15,6 +15,7 @@
   var FRAME_SAMPLES = 5;
   var HITCH_SAMPLES = 3;
 
+  // Same limits as bench/run.js, which rejects anything outside them.
   var params = new URLSearchParams(location.search);
   var maxSteps = intParam("steps", 12, 1, 20);
   var budgetMs = intParam("budget", 1000, 10, 60000);
@@ -58,9 +59,16 @@
     return performance.now() - start;
   }
 
-  function timeFrames(progress, samples) {
+  // Times the same frame several times and returns the median. If undoFrame is
+  // given, it is called between samples to undo what the previous one did, so
+  // every sample starts from the same page and only the last one's effects stay.
+  function timeFrames(progress, samples, undoFrame) {
     var times = [];
     for (var i = 0; i < samples; i++) {
+      if (i > 0 && undoFrame) {
+        undoFrame();
+        void document.body.offsetHeight; // lay out the undo outside the timed region
+      }
       benchAdapter.setProgress(progress);
       var elapsed = timeFrame();
       times.push(elapsed);
@@ -77,6 +85,11 @@
 
   function run() {
     noLoop(); // the harness decides when a frame is drawn
+    // The first frame the harness draws costs far more than any after it (the
+    // first pixel read-back and layout). Draw it untimed, before seeding, so it
+    // neither lands in step 1, where a small --budget would end the run on it,
+    // nor uses up any of the seeded random numbers.
+    timeFrame();
     Math.random = seededRandom(SEED);
     benchAdapter.reset();
 
@@ -95,7 +108,9 @@
 
       var frameMs = timeFrames(0.5, FRAME_SAMPLES);
       var lateFrameMs = timeFrames(0.99, HITCH_SAMPLES);
-      var completingFrameMs = timeFrames(1, HITCH_SAMPLES);
+      // The completing frame also adds to the page, which one real
+      // completion does once per generation, not once per sample.
+      var completingFrameMs = timeFrames(1, HITCH_SAMPLES, benchAdapter.undoCompletion);
 
       var stats = benchAdapter.stats();
       result.rows.push({

@@ -1,7 +1,7 @@
 /**
  * The one place in bench/ that knows how sketch.js works inside.
  *
- * The harness only ever calls these four functions and p5's redraw(). When the
+ * The harness only ever calls these five functions and p5's redraw(). When the
  * sketch changes shape (new data structures, a different animation clock),
  * update this file so each function still keeps its promise, and leave the
  * harness alone. That keeps "before" and "after" numbers comparable.
@@ -40,6 +40,22 @@ var benchAdapter = {
     var plant = hyphaeSentences[0];
     plant.animating = true;
     plant.animationProgress = progress;
+  },
+
+  /**
+   * Undo what a completing frame did to the page, so the harness can time
+   * that frame again from the same state.
+   *
+   * Promise: after setProgress(1) and one frame, this puts the page back as it
+   * was before that frame. The sketch adds the finished sentence to the page
+   * as a paragraph (createP in draw()), and it creates no other paragraphs,
+   * so this removes the last one.
+   */
+  undoCompletion: function() {
+    var paragraphs = document.getElementsByTagName("p");
+    if (paragraphs.length > 0) {
+      paragraphs[paragraphs.length - 1].remove();
+    }
   },
 
   /**
