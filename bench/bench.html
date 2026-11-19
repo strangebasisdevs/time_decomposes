@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Time Decomposes benchmark</title>
+
+    <!-- Same stylesheet as the real page, so layout costs are the real ones. -->
+    <link rel="stylesheet" type="text/css" href="../style.css">
+
+    <script src="../libraries/p5.min.js"></script>
+  </head>
+
+  <body>
+    <!-- The sketch under test, loaded unchanged. -->
+    <script src="../sketch.js"></script>
+
+    <!-- adapter.js is the only file that knows the sketch's internals. -->
+    <script src="adapter.js"></script>
+    <script src="harness.js"></script>
+  </body>
+</html>
